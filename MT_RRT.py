@@ -110,10 +110,10 @@ def isPathCollisionFree(node1, node2, map):
 
 
 def Extend(t_tree, x_rand, map):
-    distanceThreshold = 50
+    distanceThreshold = 100
     x_near = getNearestNeighbor(t_tree, x_rand, distanceThreshold)
     if x_near != None:
-        distanceToExtend = 5
+        distanceToExtend = 10
         x_new = getXNew(x_near,x_rand, distanceToExtend)
         if(isPathCollisionFree(x_near, x_new, map)):
             t_tree.add_node(x_new)
@@ -181,6 +181,7 @@ def HeuristicState(tree, map):
     return x_rand
 
 def isCloseToGoal(node, goalNode, dist):
+    print(euclidean_distance(node, goalNode))
     if euclidean_distance(node, goalNode) < dist:
         return True
     return False
@@ -191,7 +192,7 @@ def ExtendTree(tree1, tree2,node1,node2):
     return combinedTree
 
 def MT_RRT(x_start, x_goal, map, dist):
-    N = 100
+    N = 200
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start)
@@ -210,6 +211,14 @@ def MT_RRT(x_start, x_goal, map, dist):
             if distanceFromNodeToTree(x_rand, ogTree)[1] < dist:
                 x_new = Extend(ogTree, x_rand, map)
                 addedNewInfo = True
+                distanceConsideredCloseToGoal = 10
+                if x_new != None:
+                    if isCloseToGoal(x_new, x_goal, distanceConsideredCloseToGoal):
+                        ogTree.add_edge(x_new, x_goal)
+                        print(x_new)
+                        print(x_goal)
+                        print("WINNER WINNER")
+                        return ogTree
 
             #if we didnt extend ogTree, loop through all heuristicTrees and check if close to any
             if addedNewInfo == False:
@@ -229,6 +238,7 @@ def MT_RRT(x_start, x_goal, map, dist):
         if twoTreesAreClose(ogTree, listOfHeuristicTrees) != None:
             #should loop through all listOfHeuristicTrees?
             Ttree1, node1, Ttree2, node2 = twoTreesAreClose(ogTree, listOfHeuristicTrees)
+            #TODO investigate - this conditional below seems to be always the case
             if(Ttree1 == ogTree):
                 x_rand = HeuristicState(Ttree2, map)
                 x_new = Extend(ogTree, x_rand, map)
@@ -237,6 +247,9 @@ def MT_RRT(x_start, x_goal, map, dist):
                     distanceConsideredCloseToGoal = 10
                     if isCloseToGoal(x_new, x_goal, distanceConsideredCloseToGoal):
                         ogTree.add_edge(x_new, x_goal)
+                        print(x_new)
+                        print(x_goal)
+                        print("WINNER WINNER")
                         return ogTree
             else:
                 if isPathCollisionFree(node1, node2, map):
@@ -253,8 +266,7 @@ occupancy_grid_raw = (np.asarray(occupancy_map_img) > 0).astype(int)
 start = (184,170)
 goal = (184,207)
 tree = MT_RRT(start,goal,occupancy_grid_raw, 50)
-print(tree.nodes)
-print(tree.edges)
+#print(tree.edges)
 #print(getXNew((0,0), (34,34), 4))
 
 im = plt.imread(r'./map.png')
