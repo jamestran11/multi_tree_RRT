@@ -110,12 +110,15 @@ def isPathCollisionFree(node1, node2, map):
 
 
 def Extend(t_tree, x_rand, map):
-    x_near = getNearestNeighbor(t_tree, x_rand,2)
-    x_new = getXNew(x_near,x_rand, 2)
-    if(isPathCollisionFree(x_near, x_new, map)):
-        t_tree.add_node(x_new)
-        t_tree.add_edge(x_near, x_new)
-        return x_new
+    distanceThreshold = 50
+    x_near = getNearestNeighbor(t_tree, x_rand, distanceThreshold)
+    if x_near != None:
+        distanceToExtend = 5
+        x_new = getXNew(x_near,x_rand, distanceToExtend)
+        if(isPathCollisionFree(x_near, x_new, map)):
+            t_tree.add_node(x_new)
+            t_tree.add_edge(x_near, x_new)
+            return x_new
     return None
 
 def getFreeSpace(arr):
@@ -130,6 +133,7 @@ def RandomGenerate(map):
     return treeRoot
 
 def RandomState(map):
+    #bug here: freeCells sometimes empty
     freeCells = getFreeSpace(map)
     random_index = random.randint(0, len(freeCells) - 1)
     node = freeCells[random_index]
@@ -137,37 +141,42 @@ def RandomState(map):
 
 #Returns the (nxGraph from start, the branch node from that start graph 
 # , the nxGraph closest to that start graph, and the node closest to the start branch node)
-def twoTreesAreClose(t_root, listOfHeuristicTrees):
-    for ogTreeNode in list(t_root.nodes):
-        for nxGraph in listOfHeuristicTrees:
-            allNodes = list(nxGraph.nodes)
+def twoTreesAreClose(ogTree, listOfHeuristicTrees):
+    for ogTreeNode in list(ogTree.nodes):
+        for tree in listOfHeuristicTrees:
+            allNodes = list(tree.nodes)
             for node in allNodes:
-                if euclidean_distance(ogTreeNode, node) < 2:
-                    return (t_root, ogTreeNode, nxGraph, node)
+                if euclidean_distance(ogTreeNode, node) < 10:
+                    return (ogTree, ogTreeNode, tree, node)
 
     return None
 
 
 def HeuristicState(tree, map):
+
     #create bounding box of tree, bottom right node and top right node
     #randomly get a free space cell in the bounding box
     listOfNodes = list(tree.nodes)
     listOfNodes = np.array(listOfNodes)
+    if len(listOfNodes) > 1:
+        # Get the indices of the leftmost, rightmost, topmost, and bottommost points
+        left_idx = np.argmin(listOfNodes[:, 0])
+        right_idx = np.argmax(listOfNodes[:, 0])
+        top_idx = np.argmin(listOfNodes[:, 1])
+        bottom_idx = np.argmax(listOfNodes[:, 1])
 
-    # Get the indices of the leftmost, rightmost, topmost, and bottommost points
-    left_idx = np.argmin(listOfNodes[:, 0])
-    right_idx = np.argmax(listOfNodes[:, 0])
-    top_idx = np.argmin(listOfNodes[:, 1])
-    bottom_idx = np.argmax(listOfNodes[:, 1])
-
-    # Get the leftmost, rightmost, topmost, and bottommost points
-    leftmost = tuple(listOfNodes[left_idx])
-    rightmost = tuple(listOfNodes[right_idx])
-    topmost = tuple(listOfNodes[top_idx])
-    bottommost = tuple(listOfNodes[bottom_idx])
-
-    subMap = map[topmost[1]:bottommost[1], leftmost[0]:rightmost[0]]
-    x_rand = RandomState(subMap)
+        # Get the leftmost, rightmost, topmost, and bottommost points
+        leftmost = tuple(listOfNodes[left_idx])
+        rightmost = tuple(listOfNodes[right_idx])
+        topmost = tuple(listOfNodes[top_idx])
+        bottommost = tuple(listOfNodes[bottom_idx])
+        subMap = map[topmost[1]:bottommost[1], leftmost[0]:rightmost[0]]
+        x_rand = RandomState(subMap)
+        # TODO: Check for bugs, make sure pixels line up between submap and real map
+        x_rand = (x_rand[0]+topmost[1], x_rand[1]+leftmost[0])
+        return x_rand
+    else:
+        x_rand = listOfNodes[0]
 
     return x_rand
 
@@ -182,7 +191,7 @@ def ExtendTree(tree1, tree2,node1,node2):
     return combinedTree
 
 def MT_RRT(x_start, x_goal, map, dist):
-    N = 10
+    N = 100
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start)
@@ -192,15 +201,17 @@ def MT_RRT(x_start, x_goal, map, dist):
     listOfHeuristicTrees.append(firstHeuristicTree)
     while n <= N:
         n += 1
-        print(n)
+        print("Iteration:" + str(n))
+        # if ogTree and no other trees are close
         if twoTreesAreClose(ogTree, listOfHeuristicTrees) == None:
             addedNewInfo = False
             x_rand = RandomState(map)
-            #compare x_rand to root of tree? or check all nodes of tree and find closest
+            #check if x_rand is close to any node in ogTree, if so, extend og tree
             if distanceFromNodeToTree(x_rand, ogTree)[1] < dist:
                 x_new = Extend(ogTree, x_rand, map)
                 addedNewInfo = True
 
+            #if we didnt extend ogTree, loop through all heuristicTrees and check if close to any
             if addedNewInfo == False:
                 for tree in listOfHeuristicTrees:
                     closestNode, distanceFromNode = distanceFromNodeToTree(x_rand, tree)
@@ -209,6 +220,7 @@ def MT_RRT(x_start, x_goal, map, dist):
                             tree.add_node(x_rand)
                             tree.add_edge(closestNode,x_rand)
                             addedNewInfo == True
+
             if addedNewInfo == False:
                 newHeuristicTree = RandomGenerate(map)
                 newHeuristicTree.add_node(x_rand)
@@ -220,21 +232,36 @@ def MT_RRT(x_start, x_goal, map, dist):
             if(Ttree1 == ogTree):
                 x_rand = HeuristicState(Ttree2, map)
                 x_new = Extend(ogTree, x_rand, map)
-                listOfHeuristicTrees.remove(Ttree2)
-                if isCloseToGoal(x_new, x_goal):
-                    ogTree.add_edge(x_new, x_goal)
-                    return ogTree
+                if x_new != None:
+                    listOfHeuristicTrees.remove(Ttree2)
+                    distanceConsideredCloseToGoal = 10
+                    if isCloseToGoal(x_new, x_goal, distanceConsideredCloseToGoal):
+                        ogTree.add_edge(x_new, x_goal)
+                        return ogTree
             else:
                 if isPathCollisionFree(node1, node2, map):
                     combinedTree = ExtendTree(Ttree1, Ttree2)
                     listOfHeuristicTrees.append(combinedTree)
                     listOfHeuristicTrees.remove(Ttree2)
-    return
+    return ogTree
 
 
 
 occupancy_map_img = Image.open('./map.png')
 occupancy_grid_raw = (np.asarray(occupancy_map_img) > 0).astype(int)
 #print(euclidean_distance((0,0),(1,1)))
-path = MT_RRT((184,170),(184,207),occupancy_grid_raw, 2)
-print(path)
+start = (184,170)
+goal = (184,207)
+tree = MT_RRT(start,goal,occupancy_grid_raw, 50)
+print(tree.nodes)
+print(tree.edges)
+#print(getXNew((0,0), (34,34), 4))
+
+im = plt.imread(r'./map.png')
+implot = plt.imshow(im)
+yCoordinates = list(zip(*list(tree.nodes)))[0]
+xCoordinates = list(zip(*list(tree.nodes)))[1]
+plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=4)
+plt.scatter(start[1], start[0], c='g', s=4)
+plt.scatter(goal[1], goal[0], c='r', s=4)
+plt.show()
