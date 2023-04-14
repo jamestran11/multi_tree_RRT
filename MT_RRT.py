@@ -196,7 +196,7 @@ def isCloseToGoal(node, goalNode, dist):
     return False
 
 def ExtendTree(tree1, tree2, node1, node2):
-    combinedTree = nx.disjoint_union(tree1,tree2)
+    combinedTree = nx.union(tree1,tree2)
     combinedTree.add_edge(node1,node2)
     return combinedTree
 
@@ -204,7 +204,7 @@ def ExtendTree(tree1, tree2, node1, node2):
 im = plt.imread(r'./map.png')
 implot = plt.imshow(im)
 def MT_RRT(x_start, x_goal, map, dist):
-    N = 10
+    N = 30
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start)
