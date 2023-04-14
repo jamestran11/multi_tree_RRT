@@ -146,7 +146,8 @@ def twoTreesAreClose(ogTree, listOfHeuristicTrees):
         for tree in listOfHeuristicTrees:
             allNodes = list(tree.nodes)
             for node in allNodes:
-                if euclidean_distance(ogTreeNode, node) < 10:
+                distanceBetweenTreeNodes = euclidean_distance(ogTreeNode, node)
+                if distanceBetweenTreeNodes < 10:
                     return (ogTree, ogTreeNode, tree, node)
 
     return None
@@ -191,7 +192,7 @@ def ExtendTree(tree1, tree2,node1,node2):
     return combinedTree
 
 def MT_RRT(x_start, x_goal, map, dist):
-    N = 100
+    N = 20
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start)
@@ -200,6 +201,7 @@ def MT_RRT(x_start, x_goal, map, dist):
     firstHeuristicTree = RandomGenerate(map)
     listOfHeuristicTrees.append(firstHeuristicTree)
     while n <= N:
+        print("===========================")
         n += 1
         print("Iteration:" + str(n))
         # if ogTree and no other trees are close
@@ -212,7 +214,7 @@ def MT_RRT(x_start, x_goal, map, dist):
                 addedNewInfo = True
                 distanceConsideredCloseToGoal = 10
                 if x_new != None:
-                    print("Extended OG Tree because OG Tree not close to any other tree, and generated x_rand is close")
+                    print("x_rand is close to OG Tree, extending OG Tree")
                     if isCloseToGoal(x_new, x_goal, distanceConsideredCloseToGoal):
                         ogTree.add_edge(x_new, x_goal)
                         print(x_new)
@@ -229,7 +231,8 @@ def MT_RRT(x_start, x_goal, map, dist):
                             print("x_rand node was not close to OG Tree, adding it to this heursitic tree instead")
                             tree.add_node(x_rand)
                             tree.add_edge(closestNode,x_rand)
-                            addedNewInfo == True
+                            addedNewInfo = True
+                            break
 
             if addedNewInfo == False:
                 print("x_rand node was not close to any tree, discarding x_rand and creating a new heuristic tree somewhere")
@@ -255,9 +258,12 @@ def MT_RRT(x_start, x_goal, map, dist):
                         return ogTree, listOfHeuristicTrees
             else:
                 if isPathCollisionFree(node1, node2, map):
+                    print("combining trees")
                     combinedTree = ExtendTree(Ttree1, Ttree2)
                     listOfHeuristicTrees.append(combinedTree)
                     listOfHeuristicTrees.remove(Ttree2)
+        print("===========================")
+
     return ogTree, listOfHeuristicTrees
 
 
