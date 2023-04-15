@@ -114,7 +114,7 @@ def Extend(t_tree, x_rand, map):
     distanceThreshold = 100
     x_near = getNearestNeighbor(t_tree, x_rand, distanceThreshold)
     if x_near != None:
-        distanceToExtend = 50
+        distanceToExtend = 25
         x_new = getXNew(x_near,x_rand, distanceToExtend)
         if(isPathCollisionFree(x_near, x_new, map)):
             t_tree.add_node(x_new)
@@ -204,7 +204,7 @@ def ExtendTree(tree1, tree2, node1, node2):
 im = plt.imread(r'./map.png')
 implot = plt.imshow(im)
 def MT_RRT(x_start, x_goal, map, dist):
-    N = 100
+    N = 50
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start)
@@ -272,6 +272,9 @@ def MT_RRT(x_start, x_goal, map, dist):
                         print(x_goal)
                         print("WINNER WINNER")
                         return ogTree, listOfHeuristicTrees
+                else:
+                    Ttree2.remove_node(node2)
+
             else:
                 if isPathCollisionFree(node1, node2, map):
                     print("combining trees")
@@ -311,12 +314,11 @@ plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=4)
 plt.scatter(start[1], start[0], c='g', s=4)
 plt.scatter(goal[1], goal[0], c='r', s=4)
 
-# print("number of heuristic trees are: " + str(len(heuristicTrees)))
-# for i in range(len(heuristicTrees)):
-#     heuristicTree = heuristicTrees[i]
-#     yCoordinates = list(zip(*list(heuristicTree.nodes)))[0]
-#     xCoordinates = list(zip(*list(heuristicTree.nodes)))[1]
-#     plt.scatter(x=xCoordinates, y=yCoordinates, s=4)
+for i in range(len(heuristicTrees)):
+    heuristicTree = heuristicTrees[i]
+    yCoordinates = list(zip(*list(heuristicTree.nodes)))[0]
+    xCoordinates = list(zip(*list(heuristicTree.nodes)))[1]
+    plt.scatter(x=xCoordinates, y=yCoordinates, s=4)
 
 
 plt.show()
