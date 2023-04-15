@@ -48,7 +48,9 @@ def distanceFromNodeToTree(node, tree):
             closestNode = treeNode
     return (closestNode, shortestDistance)
 
-def getNearestNeighbor(t_tree, x_rand, threshold):
+
+def getNearestNeighbor(t_tree, x_rand):
+    #will find a the nearest node, no matter how far it is
     nearestNeighbor = None
     listOfNodes = list(t_tree.nodes)
     shortestDistance = 100000000
@@ -56,7 +58,6 @@ def getNearestNeighbor(t_tree, x_rand, threshold):
         distance = euclidean_distance(node, x_rand)
         if distance < shortestDistance:
             shortestDistance = distance
-        if shortestDistance < threshold:
             nearestNeighbor = node
 
     return nearestNeighbor
@@ -111,10 +112,9 @@ def isPathCollisionFree(node1, node2, map):
 
 
 def Extend(t_tree, x_rand, map, closeMetric):
-    distanceThreshold = closeMetric*2
-    x_near = getNearestNeighbor(t_tree, x_rand, distanceThreshold)
+    x_near = getNearestNeighbor(t_tree, x_rand)
     if x_near != None:
-        distanceToExtend = closeMetric
+        distanceToExtend = closeMetric/2
         x_new = getXNew(x_near,x_rand, distanceToExtend)
         if(isPathCollisionFree(x_near, x_new, map)):
             t_tree.add_node(x_new, pos=x_new)
@@ -212,7 +212,7 @@ def ExtendTree(tree1, tree2, node1, node2):
 
 
 def MT_RRT(x_start, x_goal, map, closeMetric):
-    N = 250
+    N = 200
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start,pos = x_start)
@@ -229,7 +229,7 @@ def MT_RRT(x_start, x_goal, map, closeMetric):
             addedNewInfo = False
             x_rand = RandomState(map)
             #check if x_rand is close to any node in ogTree, if so, extend og tree
-            if distanceFromNodeToTree(x_rand, ogTree)[1] < closeMetric:
+            if distanceFromNodeToTree(x_rand, ogTree)[1] < closeMetric*4:
                 x_new = Extend(ogTree, x_rand, map, closeMetric)
                 addedNewInfo = True
                 distanceConsideredCloseToGoal = 10
@@ -316,11 +316,11 @@ implot = plt.imshow(im)
 occupancy_map_img = Image.open('./occupancy_map.png')
 occupancy_grid_raw = (np.asarray(occupancy_map_img) > 0).astype(int)
 start = (500,200)
-goal = (375,315)
+goal = (144,510)
 #(y,x)
 # start = (184,160)
 # goal = (184,210)
-tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 100)
+tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 50)
 
 #Plot og tree nodes
 print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
