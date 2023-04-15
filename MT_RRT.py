@@ -188,8 +188,6 @@ def HeuristicState(tree, map):
         x_rand = RandomState(subMap)
         # TODO: Check for bugs, make sure pixels line up between submap and real map
         x_rand = (x_rand[0]+topmost[0], x_rand[1]+leftmost[1])
-        print("HEURISTIC")
-        print(x_rand)
         return x_rand
     else:
         x_rand = listOfNodes[0]
@@ -279,6 +277,8 @@ def MT_RRT(x_start, x_goal, map, dist):
                         return ogTree, listOfHeuristicTrees
                 else:
                     Ttree2.remove_node(node2)
+                    if len(list(Ttree2.nodes)) == 0:
+                        listOfHeuristicTrees.remove(Ttree2)
 
             else:
                 if isPathCollisionFree(node1, node2, map):
@@ -293,6 +293,10 @@ def MT_RRT(x_start, x_goal, map, dist):
                     #Temp fix is to remove the two nodes from the two trees
                     Ttree1.remove_node(node1)
                     Ttree2.remove_node(node2)
+                    if len(list(Ttree1.nodes)) == 0:
+                        listOfHeuristicTrees.remove(Ttree1)
+                    if len(list(Ttree2.nodes)) == 0:
+                        listOfHeuristicTrees.remove(Ttree2)
 
                     print("fail")
 
