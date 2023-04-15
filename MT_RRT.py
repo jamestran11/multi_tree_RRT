@@ -114,7 +114,7 @@ def Extend(t_tree, x_rand, map):
     distanceThreshold = 100
     x_near = getNearestNeighbor(t_tree, x_rand, distanceThreshold)
     if x_near != None:
-        distanceToExtend = 10
+        distanceToExtend = 50
         x_new = getXNew(x_near,x_rand, distanceToExtend)
         if(isPathCollisionFree(x_near, x_new, map)):
             t_tree.add_node(x_new)
@@ -145,10 +145,10 @@ def RandomState(map):
 def twoTreesAreClose(ogTree, listOfHeuristicTrees):
     allTrees = copy.copy(listOfHeuristicTrees)
     allTrees.insert(0, ogTree)
-    print("printing all nodes")
-    for tree in allTrees:
-        print(tree.nodes)
-    print("--------")
+    # print("printing all trees")
+    # for tree in allTrees:
+    #     print(tree.nodes)
+    # print("--------")
     for i in range(len(allTrees)):
         for j in range(i+1, len(allTrees)):
             tree1 = allTrees[i]
@@ -204,7 +204,7 @@ def ExtendTree(tree1, tree2, node1, node2):
 im = plt.imread(r'./map.png')
 implot = plt.imshow(im)
 def MT_RRT(x_start, x_goal, map, dist):
-    N = 30
+    N = 100
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start)
@@ -227,6 +227,7 @@ def MT_RRT(x_start, x_goal, map, dist):
                 distanceConsideredCloseToGoal = 10
                 if x_new != None:
                     print("x_rand is close to OG Tree, extending OG Tree")
+                    print("there are currently " +str(len(ogTree.nodes))+ " nodes in the OG Tree.")
                     if isCloseToGoal(x_new, x_goal, distanceConsideredCloseToGoal):
                         ogTree.add_edge(x_new, x_goal)
                         print(x_new)
@@ -256,13 +257,13 @@ def MT_RRT(x_start, x_goal, map, dist):
             #should loop through all listOfHeuristicTrees?
             print("Two trees are close to each other")
             Ttree1, node1, Ttree2, node2 = twoTreesAreClose(ogTree, listOfHeuristicTrees)
-            #TODO investigate - this conditional below seems to be always the case
             if(Ttree1 == ogTree):
                 print("OG Tree is close to one of the heuristic trees")
                 x_rand = HeuristicState(Ttree2, map)
                 x_new = Extend(ogTree, x_rand, map)
                 if x_new != None:
                     print("Removing the heuristic tree and extending og tree")
+                    print("there are currently " +str(len(ogTree.nodes))+ " nodes in the OG Tree.")
                     listOfHeuristicTrees.remove(Ttree2)
                     distanceConsideredCloseToGoal = 10
                     if isCloseToGoal(x_new, x_goal, distanceConsideredCloseToGoal):
@@ -278,6 +279,14 @@ def MT_RRT(x_start, x_goal, map, dist):
                     listOfHeuristicTrees.append(combinedTree)
                     listOfHeuristicTrees.remove(Ttree1)
                     listOfHeuristicTrees.remove(Ttree2)
+                else:
+                    #Bug here: these two trees will always be close, but there is a obstacle blocking their connect
+                    #Next iteration will not add any new point because these two trees still return true that they are close
+                    #Temp fix is to remove the two nodes from the two trees
+                    Ttree1.remove_node(node1)
+                    Ttree2.remove_node(node2)
+
+                    print("fail")
 
         print("===========================")
 
@@ -292,7 +301,8 @@ goal = (184,207)
 tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 10)
 
 #Plot og tree nodes
-print(len(tree.nodes))
+print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
+print("there are " + str(len(heuristicTrees)) + " heuristic trees.")
 yCoordinates = list(zip(*list(tree.nodes)))[0]
 xCoordinates = list(zip(*list(tree.nodes)))[1]
 plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=4)
