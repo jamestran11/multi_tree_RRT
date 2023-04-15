@@ -186,6 +186,10 @@ def HeuristicState(tree, map):
 
         subMap = map[topmost[0]:bottommost[0], leftmost[1]:rightmost[1]]
         print(subMap)
+        
+        #temp fix
+        if(np.all(subMap==0)):
+            return listOfNodes[0]
         # TODO: fix bug where sometimes there are no freecells in submap
         x_rand = RandomState(subMap)
         # TODO: Check for bugs, make sure pixels line up between submap and real map
@@ -209,7 +213,7 @@ def ExtendTree(tree1, tree2, node1, node2):
 
 
 def MT_RRT(x_start, x_goal, map, closeMetric):
-    N = 200
+    N = 250
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start,pos = x_start)
