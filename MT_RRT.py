@@ -185,7 +185,6 @@ def HeuristicState(tree, map):
         bottommost = tuple(listOfNodes[bottom_idx])
 
         subMap = map[topmost[0]:bottommost[0], leftmost[1]:rightmost[1]]
-        print(subMap)
         
         #temp fix
         if(np.all(subMap==0)):
@@ -317,7 +316,7 @@ implot = plt.imshow(im)
 occupancy_map_img = Image.open('./occupancy_map.png')
 occupancy_grid_raw = (np.asarray(occupancy_map_img) > 0).astype(int)
 start = (500,200)
-goal = (150,175)
+goal = (375,315)
 #(y,x)
 # start = (184,160)
 # goal = (184,210)
