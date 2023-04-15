@@ -114,12 +114,16 @@ def Extend(t_tree, x_rand, map):
     distanceThreshold = 100
     x_near = getNearestNeighbor(t_tree, x_rand, distanceThreshold)
     if x_near != None:
-        distanceToExtend = 25
+        distanceToExtend = 50
         x_new = getXNew(x_near,x_rand, distanceToExtend)
         if(isPathCollisionFree(x_near, x_new, map)):
-            t_tree.add_node(x_new)
+            t_tree.add_node(x_new, pos=x_new)
             t_tree.add_edge(x_near, x_new)
             return x_new
+        else:
+            print('missed opp to grow og tree, collision')
+    else:
+        print('missed opp to grow og tree, no nearest neighbor under threshold')
     return None
 
 def getFreeSpace(arr):
@@ -130,7 +134,7 @@ def RandomGenerate(map):
     freeCells = getFreeSpace(map)
     random_index = random.randint(0, len(freeCells) - 1)
     treeRoot = nx.Graph()
-    treeRoot.add_node(freeCells[random_index])
+    treeRoot.add_node(freeCells[random_index], pos = freeCells[random_index])
     return treeRoot
 
 def RandomState(map):
@@ -163,27 +167,29 @@ def twoTreesAreClose(ogTree, listOfHeuristicTrees):
 
 
 def HeuristicState(tree, map):
-
     #create bounding box of tree, bottom right node and top right node
     #randomly get a free space cell in the bounding box
     listOfNodes = list(tree.nodes)
     listOfNodes = np.array(listOfNodes)
     if len(listOfNodes) > 1:
         # Get the indices of the leftmost, rightmost, topmost, and bottommost points
-        left_idx = np.argmin(listOfNodes[:, 0])
-        right_idx = np.argmax(listOfNodes[:, 0])
-        top_idx = np.argmin(listOfNodes[:, 1])
-        bottom_idx = np.argmax(listOfNodes[:, 1])
+        left_idx = np.argmin(listOfNodes[:, 1])
+        right_idx = np.argmax(listOfNodes[:, 1])
+        top_idx = np.argmin(listOfNodes[:, 0])
+        bottom_idx = np.argmax(listOfNodes[:, 0])
 
         # Get the leftmost, rightmost, topmost, and bottommost points
         leftmost = tuple(listOfNodes[left_idx])
         rightmost = tuple(listOfNodes[right_idx])
         topmost = tuple(listOfNodes[top_idx])
         bottommost = tuple(listOfNodes[bottom_idx])
-        subMap = map[topmost[1]:bottommost[1], leftmost[0]:rightmost[0]]
+
+        subMap = map[topmost[0]:bottommost[0], leftmost[1]:rightmost[1]]
         x_rand = RandomState(subMap)
         # TODO: Check for bugs, make sure pixels line up between submap and real map
-        x_rand = (x_rand[0]+topmost[1], x_rand[1]+leftmost[0])
+        x_rand = (x_rand[0]+topmost[0], x_rand[1]+leftmost[1])
+        print("HEURISTIC")
+        print(x_rand)
         return x_rand
     else:
         x_rand = listOfNodes[0]
@@ -201,13 +207,12 @@ def ExtendTree(tree1, tree2, node1, node2):
     return combinedTree
 
 
-im = plt.imread(r'./map.png')
-implot = plt.imshow(im)
+
 def MT_RRT(x_start, x_goal, map, dist):
-    N = 50
+    N = 75
     n = 0
     ogTree = nx.Graph()
-    ogTree.add_node(x_start)
+    ogTree.add_node(x_start,pos = x_start)
     #right now only one, should create a list of them
     listOfHeuristicTrees = []
     firstHeuristicTree = RandomGenerate(map)
@@ -242,7 +247,7 @@ def MT_RRT(x_start, x_goal, map, dist):
                     if distanceFromNode < dist:
                         if isPathCollisionFree(x_rand, closestNode, map):
                             print("x_rand node was not close to OG Tree, but was close to another tree. Adding it to this heursitic tree")
-                            tree.add_node(x_rand)
+                            tree.add_node(x_rand,pos =x_rand)
                             tree.add_edge(closestNode,x_rand)
                             addedNewInfo = True
                             break
@@ -296,12 +301,17 @@ def MT_RRT(x_start, x_goal, map, dist):
     return ogTree, listOfHeuristicTrees
 
 
+im = plt.imread(r'./map.png')
+implot = plt.imshow(im)
 
 occupancy_map_img = Image.open('./map.png')
 occupancy_grid_raw = (np.asarray(occupancy_map_img) > 0).astype(int)
-start = (184,170)
-goal = (184,207)
-tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 10)
+# start = (500,200)
+# goal = (150,175)
+#(y,x)
+start = (184,160)
+goal = (184,210)
+tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 20)
 
 #Plot og tree nodes
 print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
