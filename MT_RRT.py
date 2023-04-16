@@ -120,10 +120,7 @@ def Extend(t_tree, x_rand, map, closeMetric):
             t_tree.add_node(x_new, pos=x_new)
             t_tree.add_edge(x_near, x_new)
             return x_new
-        else:
-            print('missed opp to grow og tree, collision')
-    else:
-        print('missed opp to grow og tree, no nearest neighbor under threshold')
+
     return None
 
 def getFreeSpace(arr):
@@ -211,8 +208,8 @@ def ExtendTree(tree1, tree2, node1, node2):
 
 
 
-def MT_RRT(x_start, x_goal, map, closeMetric):
-    N = 1000
+def MT_RRT(map, x_start, x_goal, closeMetric, numIterations):
+    N = numIterations
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start,pos = x_start)
@@ -221,10 +218,9 @@ def MT_RRT(x_start, x_goal, map, closeMetric):
     firstHeuristicTree = RandomGenerate(map)
     listOfHeuristicTrees.append(firstHeuristicTree)
     while n <= N:
-        print("===========================")
         n += 1
-        print("Iteration:" + str(n))
-        # if ogTree and no other trees are close
+        # print("Iteration:" + str(n))
+        # if ogTree and no other trees areclose
         if twoTreesAreClose(ogTree, listOfHeuristicTrees, closeMetric) == None:
             addedNewInfo = False
             x_rand = RandomState(map)
@@ -233,14 +229,10 @@ def MT_RRT(x_start, x_goal, map, closeMetric):
                 x_new = Extend(ogTree, x_rand, map, closeMetric)
                 #addedNewInfo = True
                 if x_new != None:
-                    print("x_rand is close to OG Tree, extending OG Tree")
-                    print("there are currently " +str(len(ogTree.nodes))+ " nodes in the OG Tree.")
                     if isCloseToGoal(x_new, x_goal, closeMetric):
                         ogTree.add_edge(x_new, x_goal)
-                        print(x_new)
-                        print(x_goal)
                         print("WINNER WINNER")
-                        return ogTree, listOfHeuristicTrees
+                        return list(ogTree.nodes)
 
             #if we didnt extend ogTree, loop through all heuristicTrees and check if close to any
             if addedNewInfo == False:
@@ -248,45 +240,36 @@ def MT_RRT(x_start, x_goal, map, closeMetric):
                     closestNode, distanceFromNode = distanceFromNodeToTree(x_rand, tree)
                     if distanceFromNode < closeMetric:
                         if isPathCollisionFree(x_rand, closestNode, map):
-                            print("x_rand node was not close to OG Tree, but was close to another tree. Adding it to this heursitic tree")
                             tree.add_node(x_rand,pos =x_rand)
                             tree.add_edge(closestNode,x_rand)
                             addedNewInfo = True
                             break
 
             if addedNewInfo == False:
-                print("x_rand node was not close to any tree, discarding x_rand and creating a new heuristic tree somewhere")
                 newHeuristicTree = RandomGenerate(map)
                 listOfHeuristicTrees.append(newHeuristicTree)
 
         # loop though all trees and not just og tree
         if twoTreesAreClose(ogTree, listOfHeuristicTrees, closeMetric) != None:
             #should loop through all listOfHeuristicTrees?
-            print("Two trees are close to each other")
             Ttree1, node1, Ttree2, node2 = twoTreesAreClose(ogTree, listOfHeuristicTrees, closeMetric)
             if(Ttree1 == ogTree):
-                print("OG Tree is close to one of the heuristic trees")
                 x_rand = HeuristicState(Ttree2, map)
                 x_new = Extend(ogTree, x_rand, map, closeMetric)
                 if x_new != None:
-                    print("Removing the heuristic tree and extending og tree")
-                    print("there are currently " +str(len(ogTree.nodes))+ " nodes in the OG Tree.")
+                    # print("Removing the heuristic tree and extending og tree")
+                    # print("there are currently " +str(len(ogTree.nodes))+ " nodes in the OG Tree.")
                     listOfHeuristicTrees.remove(Ttree2)
                     if isCloseToGoal(x_new, x_goal, closeMetric):
                         ogTree.add_edge(x_new, x_goal)
-                        print(x_new)
-                        print(x_goal)
-                        print("WINNER WINNER")
-                        return ogTree, listOfHeuristicTrees
+                        return list(ogTree)
                 else:
                     Ttree2.remove_node(node2)
                     if len(list(Ttree2.nodes)) == 0:
                         listOfHeuristicTrees.remove(Ttree2)
 
             else:
-                print("attempting to combine trees")
                 if isPathCollisionFree(node1, node2, map):
-                    print("success")
                     combinedTree = ExtendTree(Ttree1, Ttree2, node1, node2)
                     listOfHeuristicTrees.append(combinedTree)
                     listOfHeuristicTrees.remove(Ttree1)
@@ -302,41 +285,32 @@ def MT_RRT(x_start, x_goal, map, closeMetric):
                     if len(list(Ttree2.nodes)) == 0:
                         listOfHeuristicTrees.remove(Ttree2)
 
-                    print("fail, there was a collision")
-
-        print("===========================")
 
     return ogTree, listOfHeuristicTrees
 
 
-im = plt.imread(r'./occupancy_map.png')
+im = plt.imread(r'./map.png')
 implot = plt.imshow(im)
 
-occupancy_map_img = Image.open('./occupancy_map.png')
+occupancy_map_img = Image.open('./map.png')
 occupancy_grid_raw = (np.asarray(occupancy_map_img) > 0).astype(int)
-start = (500,200)
-goal = (144,510)
+# start = (500,200)
+# goal = (144,510)
 #(y,x)
-# start = (184,160)
-# goal = (184,210)
-tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 50)
+start = (184,160)
+goal = (184,210)
+listOfPathPoints = MT_RRT(occupancy_grid_raw, start,goal, 10, 100)
 
 #Plot og tree nodes
-print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
-print("there are " + str(len(heuristicTrees)) + " heuristic trees.")
-yCoordinates = list(zip(*list(tree.nodes)))[0]
-xCoordinates = list(zip(*list(tree.nodes)))[1]
+
+yCoordinates = list(zip(*listOfPathPoints))[0]
+xCoordinates = list(zip(*listOfPathPoints))[1]
 plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=4)
 
 #Plot start and goal positions
 plt.scatter(start[1], start[0], c='g', s=4)
 plt.scatter(goal[1], goal[0], c='r', s=4)
 
-for i in range(len(heuristicTrees)):
-    heuristicTree = heuristicTrees[i]
-    yCoordinates = list(zip(*list(heuristicTree.nodes)))[0]
-    xCoordinates = list(zip(*list(heuristicTree.nodes)))[1]
-    plt.scatter(x=xCoordinates, y=yCoordinates, s=4)
 
 
 plt.show()
