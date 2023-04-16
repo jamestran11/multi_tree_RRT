@@ -212,7 +212,7 @@ def ExtendTree(tree1, tree2, node1, node2):
 
 
 def MT_RRT(x_start, x_goal, map, closeMetric):
-    N = 200
+    N = 1000
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start,pos = x_start)
@@ -229,14 +229,13 @@ def MT_RRT(x_start, x_goal, map, closeMetric):
             addedNewInfo = False
             x_rand = RandomState(map)
             #check if x_rand is close to any node in ogTree, if so, extend og tree
-            if distanceFromNodeToTree(x_rand, ogTree)[1] < closeMetric*4:
+            if distanceFromNodeToTree(x_rand, ogTree)[1] < closeMetric*(max(len(map),len(map[0]))/closeMetric):
                 x_new = Extend(ogTree, x_rand, map, closeMetric)
-                addedNewInfo = True
-                distanceConsideredCloseToGoal = 10
+                #addedNewInfo = True
                 if x_new != None:
                     print("x_rand is close to OG Tree, extending OG Tree")
                     print("there are currently " +str(len(ogTree.nodes))+ " nodes in the OG Tree.")
-                    if isCloseToGoal(x_new, x_goal, distanceConsideredCloseToGoal):
+                    if isCloseToGoal(x_new, x_goal, closeMetric):
                         ogTree.add_edge(x_new, x_goal)
                         print(x_new)
                         print(x_goal)
