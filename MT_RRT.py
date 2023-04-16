@@ -248,9 +248,10 @@ def MT_RRT(map, x_start, x_goal, closeMetric, numIterations):
                 #addedNewInfo = True
                 if x_new != None:
                     if isCloseToGoal(x_new, x_goal, closeMetric):
-                        ogTree.add_edge(x_new, x_goal)
-                        print("WINNER WINNER")
-                        return list(ogTree.nodes)
+                        if isPathCollisionFree(x_new, x_goal, map):
+                            ogTree.add_edge(x_new, x_goal)
+                            print("WINNER WINNER")
+                            return list(ogTree.nodes)
 
             #loop through all heuristicTrees and check for the closest one to x_rand
             #connect x_rand to the closest heuristic Tree, if collision, connect with next closest one
@@ -279,9 +280,10 @@ def MT_RRT(map, x_start, x_goal, closeMetric, numIterations):
                 if x_new != None:
                     listOfHeuristicTrees.remove(Ttree2)
                     if isCloseToGoal(x_new, x_goal, closeMetric):
-                        ogTree.add_edge(x_new, x_goal)
-                        print("WINNER WINNER")
-                        return list(ogTree.nodes)
+                        if isPathCollisionFree(x_new, x_goal, map):
+                            ogTree.add_edge(x_new, x_goal)
+                            print("WINNER WINNER")
+                            return list(ogTree.nodes)
                 else:
                     Ttree2.remove_node(node2)
                     if len(list(Ttree2.nodes)) == 0:
