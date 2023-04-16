@@ -225,7 +225,7 @@ def getOrderedListOfClosestTrees(x_rand, listOfHeuristicTrees):
 
 
 
-def MT_RRT(x_start, x_goal, map, closeMetric, numIterations):
+def MT_RRT(map, x_start, x_goal, closeMetric, numIterations):
     N = numIterations
     n = 0
     ogTree = nx.Graph()
@@ -250,7 +250,7 @@ def MT_RRT(x_start, x_goal, map, closeMetric, numIterations):
                     if isCloseToGoal(x_new, x_goal, closeMetric):
                         ogTree.add_edge(x_new, x_goal)
                         print("WINNER WINNER")
-                        return ogTree, listOfHeuristicTrees
+                        return list(ogTree.nodes)
 
             #loop through all heuristicTrees and check for the closest one to x_rand
             #connect x_rand to the closest heuristic Tree, if collision, connect with next closest one
@@ -281,7 +281,7 @@ def MT_RRT(x_start, x_goal, map, closeMetric, numIterations):
                     if isCloseToGoal(x_new, x_goal, closeMetric):
                         ogTree.add_edge(x_new, x_goal)
                         print("WINNER WINNER")
-                        return ogTree, listOfHeuristicTrees
+                        return list(ogTree.nodes)
                 else:
                     Ttree2.remove_node(node2)
                     if len(list(Ttree2.nodes)) == 0:
@@ -318,24 +318,17 @@ goal = (144,510)
 #(y,x)
 # start = (184,160)
 # goal = (184,210)
-tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 75, 1000)
-
+tree = MT_RRT(occupancy_grid_raw, start,goal, 75, 1000)
+print(tree)
 #Plot og tree nodes
-print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
-print("there are " + str(len(heuristicTrees)) + " heuristic trees.")
-yCoordinates = list(zip(*list(tree.nodes)))[0]
-xCoordinates = list(zip(*list(tree.nodes)))[1]
+print("there are " + str(len(tree)) + " nodes in the og tree")
+yCoordinates = list(zip(*tree))[0]
+xCoordinates = list(zip(*tree))[1]
 plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=4)
 
 #Plot start and goal positions
 plt.scatter(start[1], start[0], c='g', s=4)
 plt.scatter(goal[1], goal[0], c='r', s=4)
-
-for i in range(len(heuristicTrees)):
-    heuristicTree = heuristicTrees[i]
-    yCoordinates = list(zip(*list(heuristicTree.nodes)))[0]
-    xCoordinates = list(zip(*list(heuristicTree.nodes)))[1]
-    plt.scatter(x=xCoordinates, y=yCoordinates, s=4)
 
 
 plt.show()
