@@ -53,7 +53,6 @@ def distanceFromNodeToTree(node, tree):
 
 
 def getNearestNeighbor(t_tree, x_rand):
-    start = time.time()
     #will find a the nearest node, no matter how far it is
     nearestNeighbor = None
     listOfNodes = list(t_tree.nodes)
@@ -63,11 +62,9 @@ def getNearestNeighbor(t_tree, x_rand):
         if distance < shortestDistance:
             shortestDistance = distance
             nearestNeighbor = node
-    # print(f'Time for getNearestNeighbor {time.time() - start}')
     return nearestNeighbor
 
 def getXNew(node, x_rand, max_distance):
-    start = time.time()
     # Calculate the distance between the two points
     distance = math.sqrt((x_rand[0] - node[0])**2 + (x_rand[1] - node[1])**2)
     
@@ -82,12 +79,10 @@ def getXNew(node, x_rand, max_distance):
     y = node[1] + fraction * (x_rand[1] - node[1])
     
     # Return the midpoint
-    # print(f'Time for getXNew {time.time() - start}')
     return (round(x), round(y))
 
 #collision is if cell has value 0
 def isPathCollisionFree(node1, node2, map):
-    start = time.time()
     x0 = node1[0]
     y0 = node1[1]
     x1 = node2[0]
@@ -114,14 +109,11 @@ def isPathCollisionFree(node1, node2, map):
 
     for coord in coords:
         if map[coord[0]][coord[1]] == 0:
-            # print(f'Time for isPathCOllisionFree {time.time() - start}')
             return False
-    # print(f'Time for isPathCOllisionFree {time.time() - start}')
     return True
 
 
 def Extend(t_tree, x_rand, map, closeMetric):
-    start = time.time()
     x_near = getNearestNeighbor(t_tree, x_rand)
     if x_near != None:
         distanceToExtend = closeMetric/2
@@ -129,39 +121,30 @@ def Extend(t_tree, x_rand, map, closeMetric):
         if(isPathCollisionFree(x_near, x_new, map)):
             t_tree.add_node(x_new, pos=x_new)
             t_tree.add_edge(x_near, x_new)
-            # print(f'Time for Extend {time.time() - start}')
             return x_new
-    # print(f'Time for Extend: {time.time() - start}')
     return None
 
 def getFreeSpace(arr):
-    start = time.time()
     indices = np.argwhere(arr == 1)
-    # print(f'Time for getFreeSpace: {time.time() - start}')
     return [(i, j) for i, j in indices]
 
 def RandomGenerate(map):
-    start = time.time()
     freeCells = getFreeSpace(map)
     random_index = random.randint(0, len(freeCells) - 1)
     treeRoot = nx.Graph()
     treeRoot.add_node(freeCells[random_index], pos = freeCells[random_index])
-    # print(f'Time for RandomGenerate: {time.time() - start}')
     return treeRoot
 
 def RandomState(map):
-    start = time.time()
     #bug here: freeCells sometimes empty
     freeCells = getFreeSpace(map)
     random_index = random.randint(0, len(freeCells) - 1)
     node = freeCells[random_index]
-    # print(f'Time for RandomState: {time.time() - start}')
     return node
 
 #Returns the (nxGraph from start, the branch node from that start graph 
 # , the nxGraph closest to that start graph, and the node closest to the start branch node)
 def twoTreesAreClose(ogTree, listOfHeuristicTrees, closeMetric):
-    start = time.time()
     allTrees = copy.copy(listOfHeuristicTrees)
     allTrees.insert(0, ogTree)
     # print("printing all trees")
@@ -178,13 +161,10 @@ def twoTreesAreClose(ogTree, listOfHeuristicTrees, closeMetric):
                     if distanceBetweenTreeNodes < closeMetric:
                         return (tree1, nodeFromFirstTree, tree2, nodeFromSecondTree)
 
-    # print(f'Time for two Trees are close: {time.time() - start}')
-
     return (None,None,None,None)
 
 
 def HeuristicState(tree, map):
-    start = time.time()
     #create bounding box of tree, bottom right node and top right node
     #randomly get a free space cell in the bounding box
     listOfNodes = list(tree.nodes)
@@ -211,25 +191,19 @@ def HeuristicState(tree, map):
         x_rand = RandomState(subMap)
         # TODO: Check for bugs, make sure pixels line up between submap and real map
         x_rand = (x_rand[0]+topmost[0], x_rand[1]+leftmost[1])
-        # print(f'Time for HeuristicState: {time.time() - start}')
         return x_rand
     else:
         x_rand = listOfNodes[0]
-    # print(f'Time for HeuristicState: {time.time() - start}')
     return x_rand
 
 def isCloseToGoal(node, goalNode, dist):
-    start = time.time()
     if euclidean_distance(node, goalNode) < dist:
         return True
-    # print(f'Time isCloseToGoal: {time.time() - start}')
     return False
 
 def ExtendTree(tree1, tree2, node1, node2):
-    start = time.time()
     combinedTree = nx.union(tree1,tree2)
     combinedTree.add_edge(node1,node2)
-    # print(f'Time ExtendTree: {time.time() - start}')
     return combinedTree
 
 def getOrderedListOfClosestTrees(x_rand, listOfHeuristicTrees):
@@ -256,7 +230,6 @@ def MT_RRT(x_start, x_goal, map, closeMetric, numIterations):
     n = 0
     ogTree = nx.Graph()
     ogTree.add_node(x_start,pos = x_start)
-    #right now only one, should create a list of them
     listOfHeuristicTrees = []
     firstHeuristicTree = RandomGenerate(map)
     listOfHeuristicTrees.append(firstHeuristicTree)
@@ -270,6 +243,8 @@ def MT_RRT(x_start, x_goal, map, closeMetric, numIterations):
             #check if x_rand is SOMEWHAT close to any node in ogTree, if so, extend og tree
             if distanceFromNodeToTree(x_rand, ogTree)[1] < closeMetric*(max(len(map),len(map[0]))/closeMetric):
                 x_new = Extend(ogTree, x_rand, map, closeMetric)
+                #algorithm says that addedNewInfo should be true, so that...
+                #if we extend from og tree, we dont grow the the heuristic trees or create a new hearistic tree
                 #addedNewInfo = True
                 if x_new != None:
                     if isCloseToGoal(x_new, x_goal, closeMetric):
@@ -343,7 +318,7 @@ goal = (144,510)
 #(y,x)
 # start = (184,160)
 # goal = (184,210)
-tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 50, 1000)
+tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 75, 1000)
 
 #Plot og tree nodes
 print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
