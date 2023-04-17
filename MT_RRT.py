@@ -310,17 +310,19 @@ def MT_RRT(x_start, x_goal, map, closeMetric, numIterations):
     return ogTree, listOfHeuristicTrees
 
 
-im = plt.imread(r'./occupancy_map.png')
-implot = plt.imshow(im)
 
-occupancy_map_img = Image.open('./occupancy_map.png')
-occupancy_grid_raw = (np.asarray(occupancy_map_img) > 0).astype(int)
+
+image = Image.open('./occupancy_map.png').convert("L")
+image = np.asarray(image)
+plt.imshow(image, cmap='gray', vmin=0, vmax=255)
+
+occupancy_grid_raw = (np.asarray(image) > 0).astype(int)
 start = (500,200)
 goal = (144,510)
 #(y,x)
 # start = (184,160)
 # goal = (184,210)
-tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 75, 1000)
+tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 50, 500)
 
 #Plot og tree nodes
 print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
