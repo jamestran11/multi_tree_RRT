@@ -131,7 +131,7 @@ def getFreeSpace(arr):
 def RandomGenerate(map):
     freeCells = getFreeSpace(map)
     random_index = random.randint(0, len(freeCells) - 1)
-    treeRoot = nx.Graph()
+    treeRoot = nx.DiGraph()
     treeRoot.add_node(freeCells[random_index], pos = freeCells[random_index])
     return treeRoot
 
@@ -228,7 +228,7 @@ def getOrderedListOfClosestTrees(x_rand, listOfHeuristicTrees):
 def MT_RRT(map, x_start, x_goal, closeMetric, numIterations):
     N = numIterations
     n = 0
-    ogTree = nx.Graph()
+    ogTree = nx.DiGraph()
     ogTree.add_node(x_start,pos = x_start)
     listOfHeuristicTrees = []
     firstHeuristicTree = RandomGenerate(map)
@@ -251,7 +251,8 @@ def MT_RRT(map, x_start, x_goal, closeMetric, numIterations):
                         if isPathCollisionFree(x_new, x_goal, map):
                             ogTree.add_edge(x_new, x_goal)
                             print("WINNER WINNER")
-                            return list(ogTree.nodes)
+                            pathNodes = nx.dfs_tree(ogTree.reverse(), source=goal)
+                            return list(reversed(list(pathNodes)))
 
             #loop through all heuristicTrees and check for the closest one to x_rand
             #connect x_rand to the closest heuristic Tree, if collision, connect with next closest one
@@ -283,7 +284,8 @@ def MT_RRT(map, x_start, x_goal, closeMetric, numIterations):
                         if isPathCollisionFree(x_new, x_goal, map):
                             ogTree.add_edge(x_new, x_goal)
                             print("WINNER WINNER")
-                            return list(ogTree.nodes)
+                            pathNodes = nx.dfs_tree(ogTree.reverse(), source=goal)
+                            return list(reversed(list(pathNodes)))
                 else:
                     Ttree2.remove_node(node2)
                     if len(list(Ttree2.nodes)) == 0:
@@ -307,30 +309,31 @@ def MT_RRT(map, x_start, x_goal, closeMetric, numIterations):
                     if len(list(Ttree2.nodes)) == 0:
                         listOfHeuristicTrees.remove(Ttree2)
 
-    return ogTree, listOfHeuristicTrees
+    #return ogTree, listOfHeuristicTrees
+    return None
 
 
-im = plt.imread(r'./occupancy_map.png')
+im = plt.imread(r'./map.png')
 implot = plt.imshow(im)
 
-occupancy_map_img = Image.open('./occupancy_map.png')
+occupancy_map_img = Image.open('./map.png')
 occupancy_grid_raw = (np.asarray(occupancy_map_img) > 0).astype(int)
-start = (500,200)
-goal = (144,510)
+# start = (500,200)
+# goal = (144,510)
 #(y,x)
-# start = (184,160)
-# goal = (184,210)
-tree = MT_RRT(occupancy_grid_raw, start,goal, 75, 1000)
+start = (184,160)
+goal = (184,210)
+tree = MT_RRT(occupancy_grid_raw, start,goal, 10, 100)
+
 print(tree)
-#Plot og tree nodes
-print("there are " + str(len(tree)) + " nodes in the og tree")
-yCoordinates = list(zip(*tree))[0]
-xCoordinates = list(zip(*tree))[1]
-plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=4)
+if tree != None:
+    #Plot og tree nodes
+    yCoordinates = list(zip(*tree))[0]
+    xCoordinates = list(zip(*tree))[1]
+    plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=4)
 
-#Plot start and goal positions
-plt.scatter(start[1], start[0], c='g', s=4)
-plt.scatter(goal[1], goal[0], c='r', s=4)
+    #Plot start and goal positions
+    plt.scatter(start[1], start[0], c='g', s=4)
+    plt.scatter(goal[1], goal[0], c='r', s=4)
 
-
-plt.show()
+    plt.show()
