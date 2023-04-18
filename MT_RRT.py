@@ -312,17 +312,21 @@ def MT_RRT(x_start, x_goal, map, closeMetric, numIterations):
 
 
 
-image = Image.open('./occupancy_map.png').convert("L")
+image = Image.open('./map2.png').convert("L")
 image = np.asarray(image)
 plt.imshow(image, cmap='gray', vmin=0, vmax=255)
 
 occupancy_grid_raw = (np.asarray(image) > 0).astype(int)
-start = (500,200)
-goal = (144,510)
+occupancy_start = (500,200)
+occupancy_goal = (144,510)
 #(y,x)
 # start = (184,160)
 # goal = (184,210)
-tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 50, 500)
+map2_start = (10,10)
+map2_goal = (200,400)
+start = map2_start
+goal = map2_goal
+tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 25, 1000)
 
 #Plot og tree nodes
 print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
@@ -335,11 +339,20 @@ plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=4)
 plt.scatter(start[1], start[0], c='g', s=4)
 plt.scatter(goal[1], goal[0], c='r', s=4)
 
-for i in range(len(heuristicTrees)):
-    heuristicTree = heuristicTrees[i]
-    yCoordinates = list(zip(*list(heuristicTree.nodes)))[0]
-    xCoordinates = list(zip(*list(heuristicTree.nodes)))[1]
-    plt.scatter(x=xCoordinates, y=yCoordinates, s=4)
+edges = list(tree.edges)
+for edge in edges:
+    plt.plot((edge[0][1],edge[1][1]),(edge[0][0],edge[1][0]), linestyle='-', color='b',
+            markerfacecolor='black', marker='o', markeredgewidth = 0.0, markersize = 0.0) 
 
 
+for hTree in heuristicTrees:
+    edges = list(hTree.edges)
+    r = random.uniform(0,1)
+    g = random.uniform(0,1)
+    b = random.uniform(0,1)
+    for edge in edges:
+        plt.plot((edge[0][1],edge[1][1]),(edge[0][0],edge[1][0]), linestyle='-',color=(r,g,b),
+                markerfacecolor=(r,g,b), marker='o', markeredgewidth = 0.0, markersize = 3.0) 
+    
 plt.show()
+
