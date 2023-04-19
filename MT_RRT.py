@@ -118,10 +118,11 @@ def Extend(t_tree, x_rand, map, closeMetric):
     if x_near != None:
         distanceToExtend = closeMetric/2
         x_new = getXNew(x_near,x_rand, distanceToExtend)
-        if(isPathCollisionFree(x_near, x_new, map)):
-            t_tree.add_node(x_new, pos=x_new)
-            t_tree.add_edge(x_near, x_new)
-            return x_new
+        if(isPathCollisionFree(x_near, x_rand, map)):
+            if(isPathCollisionFree(x_near, x_new, map)):
+                t_tree.add_node(x_new, pos=x_new)
+                t_tree.add_edge(x_near, x_new)
+                return x_new
     return None
 
 def getFreeSpace(arr):
@@ -325,10 +326,10 @@ occupancy_goal = (144,510)
 # start = (184,160)
 # goal = (184,210)
 map2_start = (10,10)
-map2_goal = (100,300)
+map2_goal = (200,300)
 start = map2_start
 goal = map2_goal
-tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 25, 1000)
+tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 25, 2000)
 
 #Plot og tree nodes
 print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
