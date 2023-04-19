@@ -118,10 +118,11 @@ def Extend(t_tree, x_rand, map, closeMetric):
     if x_near != None:
         distanceToExtend = closeMetric/2
         x_new = getXNew(x_near,x_rand, distanceToExtend)
-        if(isPathCollisionFree(x_near, x_new, map)):
-            t_tree.add_node(x_new, pos=x_new)
-            t_tree.add_edge(x_near, x_new)
-            return x_new
+        if(isPathCollisionFree(x_near, x_rand, map)):
+            if(isPathCollisionFree(x_near, x_new, map)):
+                t_tree.add_node(x_new, pos=x_new)
+                t_tree.add_edge(x_near, x_new)
+                return x_new
     return None
 
 def getFreeSpace(arr):
@@ -267,7 +268,9 @@ def MT_RRT(map, x_start, x_goal, closeMetric, numIterations):
                         break
             #if we didnt connect x_rand to any tree, create a new random heuristic tree somewhere
             if addedNewInfo == False:
-                newHeuristicTree = RandomGenerate(map)
+                #newHeuristicTree = RandomGenerate(map)
+                newHeuristicTree = nx.DiGraph()
+                newHeuristicTree.add_node(x_rand)
                 listOfHeuristicTrees.append(newHeuristicTree)
 
         Ttree1, node1, Ttree2, node2 = twoTreesAreClose(ogTree, listOfHeuristicTrees, closeMetric)
