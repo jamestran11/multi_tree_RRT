@@ -266,7 +266,9 @@ def MT_RRT(x_start, x_goal, map, closeMetric, numIterations):
                         break
             #if we didnt connect x_rand to any tree, create a new random heuristic tree somewhere
             if addedNewInfo == False:
-                newHeuristicTree = RandomGenerate(map)
+                #newHeuristicTree = RandomGenerate(map)
+                newHeuristicTree = nx.Graph()
+                newHeuristicTree.add_node(x_rand)
                 listOfHeuristicTrees.append(newHeuristicTree)
 
         Ttree1, node1, Ttree2, node2 = twoTreesAreClose(ogTree, listOfHeuristicTrees, closeMetric)
@@ -323,7 +325,7 @@ occupancy_goal = (144,510)
 # start = (184,160)
 # goal = (184,210)
 map2_start = (10,10)
-map2_goal = (200,400)
+map2_goal = (100,300)
 start = map2_start
 goal = map2_goal
 tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 25, 1000)
@@ -331,18 +333,17 @@ tree, heuristicTrees = MT_RRT(start,goal,occupancy_grid_raw, 25, 1000)
 #Plot og tree nodes
 print("there are " + str(len(tree.nodes)) + " nodes in the og tree")
 print("there are " + str(len(heuristicTrees)) + " heuristic trees.")
-yCoordinates = list(zip(*list(tree.nodes)))[0]
-xCoordinates = list(zip(*list(tree.nodes)))[1]
-plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=4)
+# yCoordinates = list(zip(*list(tree.nodes)))[0]
+# xCoordinates = list(zip(*list(tree.nodes)))[1]
+# plt.scatter(x=xCoordinates, y=yCoordinates, c='b', s=10)
 
 #Plot start and goal positions
-plt.scatter(start[1], start[0], c='g', s=4)
-plt.scatter(goal[1], goal[0], c='r', s=4)
+
 
 edges = list(tree.edges)
 for edge in edges:
     plt.plot((edge[0][1],edge[1][1]),(edge[0][0],edge[1][0]), linestyle='-', color='b',
-            markerfacecolor='black', marker='o', markeredgewidth = 0.0, markersize = 0.0) 
+            markerfacecolor='b', marker='o', markeredgewidth = 0.0, markersize = 3.0) 
 
 
 for hTree in heuristicTrees:
@@ -354,5 +355,8 @@ for hTree in heuristicTrees:
         plt.plot((edge[0][1],edge[1][1]),(edge[0][0],edge[1][0]), linestyle='-',color=(r,g,b),
                 markerfacecolor=(r,g,b), marker='o', markeredgewidth = 0.0, markersize = 3.0) 
     
+plt.scatter(start[1], start[0], c='g', s=100)
+plt.scatter(goal[1], goal[0], c='r', s=100)
+
 plt.show()
 
